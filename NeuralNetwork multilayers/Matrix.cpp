@@ -1,4 +1,4 @@
-#include <C:\Users\Matteo\source\repos\NN my self\NN my self\matrix.h>
+#include "Matrix.h"
 #pragma warning(disable : 4996)
 
 Matrix::Matrix(std::vector<std::vector<double>> d_data)

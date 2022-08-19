@@ -15,7 +15,7 @@ double Sigmoid_P(double in)
 double wti_P(std::vector<double> weights, std::vector<double> input, double bias)
 {
 	double sum = bias;
-	for (int i = 0; i < weights.size(); i++)
+	for (int i = 0; i < int(weights.size()); i++)
 	{
 		sum += weights[i] * input[i];
 	}
