@@ -3,21 +3,7 @@
 #include <string>
 #include <windows.h>
 
-double Sigmoid(double inp)
-{
-	return 1 / (1 + exp(-inp));
-}
-
-
-double derivative_Error(double a, double b)
-{
-	return 2 * (b - a); //derivative of (a-b)^2
-}
-
-double derivative_Sigmoid(double b)
-{
-	return b * (1 - b);
-}
+const static double LRELUC = 0.25;
 
 double m_max(double a, double b)
 {
@@ -29,15 +15,51 @@ double m_min(double a, double b)
 	return a < b ? a : b;
 }
 
+double Sigmoid(double inp)
+{
+	return 1 / (1 + exp(-inp));
+}
+
+double ReLU(double in)
+{
+	return m_max(in, 0);
+}
+
+double LeakyReLU(double in)
+{
+	return in >= 0 ? in : in * LRELUC;
+}
+
+double derivative_LeakyReLU(double in)
+{
+	return in >= 0 ? 0 : LRELUC;
+}
+
+double derivative_ReLU(double in)
+{
+	return in <= 0 ? 0 : 1;
+}
+
+double derivative_Sigmoid(double b)
+{
+	return b * (1 - b);
+}
+
+
 double derivative_tanh(double b)
 {
 	double e = tanh(b);
 	return 1 - e * e;
 }
 
-static double (*activation)(double) { &tanh };
+double derivative_Error(double a, double b)
+{
+	return 2 * (b - a); //derivative of (a-b)^2
+}
 
-static double (*derivative_activation)(double) { &derivative_tanh };
+static double (*activation)(double) { &ReLU};
+
+static double (*derivative_activation)(double) { &derivative_ReLU};
 
 double getRand()
 {
