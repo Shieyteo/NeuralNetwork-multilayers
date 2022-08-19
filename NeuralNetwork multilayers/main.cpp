@@ -57,9 +57,9 @@ double derivative_Error(double a, double b)
 	return 2 * (b - a); //derivative of (a-b)^2
 }
 
-static double (*activation)(double) { &ReLU};
+static double (*activation)(double) { &Sigmoid};
 
-static double (*derivative_activation)(double) { &derivative_ReLU};
+static double (*derivative_activation)(double) { &derivative_Sigmoid};
 
 double getRand()
 {
@@ -219,11 +219,14 @@ int main()
 	srand(time(NULL)); // intialize rand
 	const double lr = 0.05;	//learning rate
 	createDataSet();
+	//train_and_test_samples = { {1,1,1},{0,1,0},{1,0,0},{0,0,1} };
 	//initiate weights and biases
-	std::vector<std::vector<double>> weights1 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()} }; // from input layer to hidden layer 
+	std::vector<std::vector<double>> weights0 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()} };
+	std::vector<std::vector<double>> weights1 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()},{ getRand(),getRand(),getRand() } }; // from input layer to hidden layer 
 	std::vector<std::vector<double>> weights2 = { { getRand()},{getRand() },{ getRand()} }; // from hidden layer to output layer
+	std::vector<double> bias0 = { 1,1,1 };
 	std::vector<double> bias1 = { 1,1,1 }; // biases for  the hidden layer
-	std::vector<double> bias2 = { 1 }; // bias for  the output layer
+	std::vector<double> bias2 = {1 }; // bias for  the output layer
 	
 	
 	for (int epoch = 0; epoch < 100000000; epoch++)
@@ -236,51 +239,81 @@ int main()
 			double expected = sample[2];
 
 			//forward propagation
-			std::vector<double> hidden_layer_values = forwardProp(&weights1, &input, &bias1);
-			std::vector<double> output_layer_values = forwardProp(&weights2, &hidden_layer_values, &bias2); // in this senario just one value
+			std::vector<double> hidden_layer_values0 = forwardProp(&weights0, &input, &bias0);
+			std::vector<double> hidden_layer_values1 = forwardProp(&weights1, &hidden_layer_values0, &bias1);
+			std::vector<double> output_layer_values = forwardProp(&weights2, &hidden_layer_values1, &bias2); // in this senario just one value
 
 			error += abs(expected - output_layer_values[0]);
 			//BACKPROP
 
 			//Outputlayer error calculation	
 			double d_err = derivative_Error(expected, output_layer_values[0]);
-			//double d_sig = derivative_Sigmoid(output_layer_values[0]);
 			double d_sig = derivative_activation(output_layer_values[0]);
-			double complete_error = d_err * d_sig;
 
+			double complete_error20 = d_err * d_sig;
 
 			//Hiddenlayer error calculation										
-			double d_err_hidden0 = complete_error * weights2[0][0];
-			double d_err_hidden1 = complete_error * weights2[1][0];
-			double d_err_hidden2 = complete_error * weights2[2][0];
+			double d_err_hidden10 = complete_error20 * weights2[0][0];
+			double d_err_hidden11 = complete_error20 * weights2[1][0];
+			double d_err_hidden12 = complete_error20 * weights2[2][0];
 
 
-			//double d_sig_hidden0 = derivative_Sigmoid(hidden_layer_values[0]);
-			//double d_sig_hidden1 = derivative_Sigmoid(hidden_layer_values[1]);
-			double d_sig_hidden0 = derivative_activation(hidden_layer_values[0]);
-			double d_sig_hidden1 = derivative_activation(hidden_layer_values[1]);
-			double d_sig_hidden2 = derivative_activation(hidden_layer_values[2]);
+			double d_sig_hidden10 = derivative_activation(hidden_layer_values1[0]);
+			double d_sig_hidden11 = derivative_activation(hidden_layer_values1[1]);
+			double d_sig_hidden12 = derivative_activation(hidden_layer_values1[2]);
+
+			double complete_error10 = d_err_hidden10 * d_sig_hidden10;
+			double complete_error11 = d_err_hidden11 * d_sig_hidden11;
+			double complete_error12 = d_err_hidden12 * d_sig_hidden12;
+
+			double d_err_hidden00 = complete_error10 * weights1[0][0] + complete_error11 * weights1[0][1] + complete_error12 * weights1[0][2];
+			double d_err_hidden01 = complete_error10 * weights1[1][0] + complete_error11 * weights1[1][1] + complete_error12 * weights1[1][2];
+			double d_err_hidden02 = complete_error10 * weights1[2][0] + complete_error11 * weights1[2][1] + complete_error12 * weights1[2][2];
+
+			double d_sig_hidden00 = derivative_activation(hidden_layer_values0[0]);
+			double d_sig_hidden01 = derivative_activation(hidden_layer_values0[1]);
+			double d_sig_hidden02 = derivative_activation(hidden_layer_values0[2]);
+
+			double complete_error00 = d_err_hidden00 * d_sig_hidden00;
+			double complete_error01 = d_err_hidden01 * d_sig_hidden01;
+			double complete_error02 = d_err_hidden02 * d_sig_hidden02;
 
 			//bias adjustment
-			bias2[0] -= lr * complete_error;
+			bias2[0] -= lr * complete_error20;
 
 			//weight adjustment
-			//std::cout << -log((1 - hidden_layer_values[0]) / hidden_layer_values[0]) << "\n";
-			weights2[0][0] -= lr * complete_error * hidden_layer_values[0];
-			weights2[1][0] -= lr * complete_error * hidden_layer_values[1];
+			weights2[0][0] -= lr * complete_error20 * hidden_layer_values1[0];
+			weights2[1][0] -= lr * complete_error20 * hidden_layer_values1[1];
 
 			//bias adjustment
-			bias1[0] -= lr * d_err_hidden0 * d_sig_hidden0;
-			bias1[1] -= lr * d_err_hidden1 * d_sig_hidden1;
+			bias1[0] -= lr * complete_error10;
+			bias1[1] -= lr * complete_error11;
+			bias1[2] -= lr * complete_error12;
 
 			//weight adjustment
-			weights1[0][0] -= lr * d_err_hidden0 * d_sig_hidden0 * input[0];
-			weights1[1][0] -= lr * d_err_hidden0 * d_sig_hidden0 * input[1];
-			weights1[0][1] -= lr * d_err_hidden1 * d_sig_hidden1 * input[0];
-			weights1[1][1] -= lr * d_err_hidden1 * d_sig_hidden1 * input[1];
-			weights1[0][2] -= lr * d_err_hidden2 * d_sig_hidden2 * input[0];
-			weights1[1][2] -= lr * d_err_hidden2 * d_sig_hidden2 * input[1];
-			
+			weights1[0][0] -= lr * complete_error10 * hidden_layer_values0[0];
+			weights1[1][0] -= lr * complete_error10 * hidden_layer_values0[1];
+			weights1[2][0] -= lr * complete_error10 * hidden_layer_values0[2];
+			weights1[0][1] -= lr * complete_error11 * hidden_layer_values0[0];
+			weights1[1][1] -= lr * complete_error11 * hidden_layer_values0[1];
+			weights1[2][1] -= lr * complete_error11 * hidden_layer_values0[2];
+			weights1[0][2] -= lr * complete_error12 * hidden_layer_values0[0];
+			weights1[1][2] -= lr * complete_error12 * hidden_layer_values0[1];
+			weights1[2][2] -= lr * complete_error12 * hidden_layer_values0[2];
+
+			//bias adjustment
+			bias0[0] -= lr * complete_error00;
+			bias0[1] -= lr * complete_error01;
+			bias0[2] -= lr * complete_error02;
+
+			//weight adjustment
+			weights0[0][0] -= lr * complete_error00 * input[0];
+			weights0[1][0] -= lr * complete_error00 * input[1];
+			weights0[0][1] -= lr * complete_error01 * input[0];
+			weights0[1][1] -= lr * complete_error01 * input[1];
+			weights0[0][2] -= lr * complete_error02 * input[0];
+			weights0[1][2] -= lr * complete_error02 * input[1];
+
 		}
 		if (epoch % 1000 == 0)
 		{
@@ -291,9 +324,13 @@ int main()
 				for (float j = 0; j < size; j++)
 				{
 					std::vector<double> val_input = { i / size,j / size };
-					std::vector<double> hidden_output = forwardProp(&weights1, &val_input, &bias1);
-					std::vector<double> output = forwardProp(&weights2, &hidden_output, &bias2);
-					int index = m_max(0,output[0] * 67);
+					std::vector<double> h0 = forwardProp(&weights0, &val_input, &bias0);
+					std::vector<double> h1 = forwardProp(&weights1, &h0, &bias1);
+					std::vector<double> o = forwardProp(&weights2, &h1, &bias2); // in this senario just one value
+					std::vector<double> hidden_output0 = forwardProp(&weights0, &val_input, &bias0);
+					std::vector<double> hidden_output1 = forwardProp(&weights1, &hidden_output0, &bias1);
+					std::vector<double> output = forwardProp(&weights2, &hidden_output1, &bias2);
+					int index = m_max(0,o[0] * 67);
 					map += CHARMAP[index];
 					map += ' ';
 				}
