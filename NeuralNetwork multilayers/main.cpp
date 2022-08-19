@@ -57,13 +57,19 @@ double derivative_Error(double a, double b)
 	return 2 * (b - a); //derivative of (a-b)^2
 }
 
-static double (*activation)(double) { &Sigmoid};
+static double (*activation)(double) { &ReLU};
 
-static double (*derivative_activation)(double) { &derivative_Sigmoid};
+static double (*derivative_activation)(double) { &derivative_ReLU};
 
-double getRand()
+double getRand(char c = 'w')
 {
-	return double(rand()) / RAND_MAX * 2 - 1; // for weight initialization value between -1 and 1
+	switch (c)
+	{
+	case 'w':
+		return double(rand()) / RAND_MAX * 2 - 1;
+	case 'b':
+		return double(rand()) / RAND_MAX;
+	}
 }
 
 std::vector<double> forwardProp(std::vector<std::vector<double>>* weights, std::vector<double>* values, std::vector<double>* bias)
@@ -87,149 +93,66 @@ std::vector<std::vector<double>> train_and_test_samples = {}; //XOR Problem (Non
 
 std::string CHARMAP = ".'`^_,:;-~+*?!i><][}{1)(|/IltfjrxnuvczXYUJCLQ0OZmwqpdbkhao#MW&8%B$@";
 
-void createDataSet()
+void createDataSet(unsigned int number, float precision=0.05)
 {
-	//unten links 1
-	train_and_test_samples.push_back({ 0.4,0.0,1 });
-	train_and_test_samples.push_back({ 0.3,0.0,1 });
-	train_and_test_samples.push_back({ 0.2,0.0,1 });
-	train_and_test_samples.push_back({ 0.1,0.0,1 });
-	train_and_test_samples.push_back({ 0.0,0.0,1 });
-
-	train_and_test_samples.push_back({ 0.0,0.1,1 });
-	train_and_test_samples.push_back({ 0.1,0.1,1 });
-	train_and_test_samples.push_back({ 0.2,0.1,1 });
-	train_and_test_samples.push_back({ 0.3,0.1,1 });
-	train_and_test_samples.push_back({ 0.4,0.1,1 });
-
-	train_and_test_samples.push_back({ 0.0,0.2,1 });
-	train_and_test_samples.push_back({ 0.1,0.2,1 });
-	train_and_test_samples.push_back({ 0.2,0.2,1 });
-	train_and_test_samples.push_back({ 0.3,0.2,1 });
-	train_and_test_samples.push_back({ 0.4,0.2,1 });
-
-	train_and_test_samples.push_back({ 0.0,0.3,1 });
-	train_and_test_samples.push_back({ 0.1,0.3,1 });
-	train_and_test_samples.push_back({ 0.2,0.3,1 });
-	train_and_test_samples.push_back({ 0.3,0.3,1 });
-	train_and_test_samples.push_back({ 0.4,0.3,1 });
-
-	train_and_test_samples.push_back({ 0.0,0.4,1 });
-	train_and_test_samples.push_back({ 0.1,0.4,1 });
-	train_and_test_samples.push_back({ 0.2,0.4,1 });
-	train_and_test_samples.push_back({ 0.3,0.4,1 });
-	train_and_test_samples.push_back({ 0.4,0.4,1 });
-
-	//unten rechts 0
-	train_and_test_samples.push_back({ 0.1,0.6,0 });
-	train_and_test_samples.push_back({ 0.2,0.6,0 });
-	train_and_test_samples.push_back({ 0.3,0.6,0 });
-	train_and_test_samples.push_back({ 0.4,0.6,0 });
-	train_and_test_samples.push_back({ 0.0,0.6,0 });
-
-	train_and_test_samples.push_back({ 0.1,0.7,0 });
-	train_and_test_samples.push_back({ 0.2,0.7,0 });
-	train_and_test_samples.push_back({ 0.3,0.7,0 });
-	train_and_test_samples.push_back({ 0.4,0.7,0 });
-	train_and_test_samples.push_back({ 0.0,0.7,0 });
-
-	train_and_test_samples.push_back({ 0.1,0.8,0 });
-	train_and_test_samples.push_back({ 0.2,0.8,0 });
-	train_and_test_samples.push_back({ 0.3,0.8,0 });
-	train_and_test_samples.push_back({ 0.4,0.8,0 });
-	train_and_test_samples.push_back({ 0.0,0.8,0 });
-
-	train_and_test_samples.push_back({ 0.1,0.9,0 });
-	train_and_test_samples.push_back({ 0.2,0.9,0 });
-	train_and_test_samples.push_back({ 0.3,0.9,0 });
-	train_and_test_samples.push_back({ 0.4,0.9,0 });
-	train_and_test_samples.push_back({ 0.0,0.9,0 });
-
-	train_and_test_samples.push_back({ 0.1,1.0,0 });
-	train_and_test_samples.push_back({ 0.2,1.0,0 });
-	train_and_test_samples.push_back({ 0.3,1.0,0 });
-	train_and_test_samples.push_back({ 0.4,1.0,0 });
-	train_and_test_samples.push_back({ 0.0,1.0,0 });
-
-	//oben rechts 1
-	train_and_test_samples.push_back({ 0.6,0.6,1 });
-	train_and_test_samples.push_back({ 0.7,0.6,1 });
-	train_and_test_samples.push_back({ 0.8,0.6,1 });
-	train_and_test_samples.push_back({ 0.9,0.6,1 });
-	train_and_test_samples.push_back({ 1.0,0.6,1 });
-
-	train_and_test_samples.push_back({ 0.6,0.7,1 });
-	train_and_test_samples.push_back({ 0.7,0.7,1 });
-	train_and_test_samples.push_back({ 0.8,0.7,1 });
-	train_and_test_samples.push_back({ 0.9,0.7,1 });
-	train_and_test_samples.push_back({ 1.0,0.7,1 });
-
-	train_and_test_samples.push_back({ 0.6,0.8,1 });
-	train_and_test_samples.push_back({ 0.7,0.8,1 });
-	train_and_test_samples.push_back({ 0.8,0.8,1 });
-	train_and_test_samples.push_back({ 0.9,0.8,1 });
-	train_and_test_samples.push_back({ 1.0,0.8,1 });
-
-	train_and_test_samples.push_back({ 0.6,0.9,1 });
-	train_and_test_samples.push_back({ 0.7,0.9,1 });
-	train_and_test_samples.push_back({ 0.8,0.9,1 });
-	train_and_test_samples.push_back({ 0.9,0.9,1 });
-	train_and_test_samples.push_back({ 1.0,0.9,1 });
-
-	train_and_test_samples.push_back({ 0.6,1.0,1 });
-	train_and_test_samples.push_back({ 0.7,1.0,1 });
-	train_and_test_samples.push_back({ 0.8,1.0,1 });
-	train_and_test_samples.push_back({ 0.9,1.0,1 });
-	train_and_test_samples.push_back({ 1.0,1.0,1 });
-
-	//oben links 0
-	train_and_test_samples.push_back({ 0.6,0.0,0 });
-	train_and_test_samples.push_back({ 0.7,0.0,0 });
-	train_and_test_samples.push_back({ 0.8,0.0,0 });
-	train_and_test_samples.push_back({ 0.9,0.0,0 });
-	train_and_test_samples.push_back({ 1.0,0.0,0 });
-
-	train_and_test_samples.push_back({ 0.6,0.1,0 });
-	train_and_test_samples.push_back({ 0.7,0.1,0 });
-	train_and_test_samples.push_back({ 0.8,0.1,0 });
-	train_and_test_samples.push_back({ 0.9,0.1,0 });
-	train_and_test_samples.push_back({ 1.0,0.1,0 });
-
-	train_and_test_samples.push_back({ 0.6,0.2,0 });
-	train_and_test_samples.push_back({ 0.7,0.2,0 });
-	train_and_test_samples.push_back({ 0.8,0.2,0 });
-	train_and_test_samples.push_back({ 0.9,0.2,0 });
-	train_and_test_samples.push_back({ 1.0,0.2,0 });
-
-	train_and_test_samples.push_back({ 0.6,0.3,0 });
-	train_and_test_samples.push_back({ 0.7,0.3,0 });
-	train_and_test_samples.push_back({ 0.8,0.3,0 });
-	train_and_test_samples.push_back({ 0.9,0.3,0 });
-	train_and_test_samples.push_back({ 1.0,0.3,0 });
-
-	train_and_test_samples.push_back({ 0.6,0.4,0 });
-	train_and_test_samples.push_back({ 0.7,0.4,0 });
-	train_and_test_samples.push_back({ 0.8,0.4,0 });
-	train_and_test_samples.push_back({ 0.9,0.4,0 });
-	train_and_test_samples.push_back({ 1.0,0.4,0 });
+	switch (number)
+	{
+	case 0:
+	{
+		for (float x = 0; x < 1; x += precision)
+		{
+			for (float y = 0; y < 1; y += precision)
+			{
+				if ((x > 0.5 && y <= 0.5) || (x <= 0.5 && y > 0.5))
+				{
+					train_and_test_samples.push_back({ x,y,0 });
+				}
+				else
+				{
+					train_and_test_samples.push_back({ x,y,1 });
+				}
+			}
+		}
+		return;
+	}
+	case 1:
+	{
+		for (float x = 0; x < 1; x += precision)
+		{
+			for (float y = 0; y < 1; y += precision)
+			{
+				if (x > 0.3 && x <= 0.7 && y > 0.3 && y <= 0.7)
+				{
+					train_and_test_samples.push_back({ x,y,1 });
+				}
+				else
+				{
+					train_and_test_samples.push_back({ x,y,0 });
+				}
+			}
+		}
+		return;
+	}
+	}
+	
 }
 
 int main()
 {
 	srand(time(NULL)); // intialize rand
-	const double lr = 0.05;	//learning rate
-	createDataSet();
+	const double lr = 0.001;	//learning rate
+	createDataSet(1,0.2);
 	//train_and_test_samples = { {1,1,1},{0,1,0},{1,0,0},{0,0,1} };
 	//initiate weights and biases
 	std::vector<std::vector<double>> weights0 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()} };
 	std::vector<std::vector<double>> weights1 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()},{ getRand(),getRand(),getRand() } }; // from input layer to hidden layer 
 	std::vector<std::vector<double>> weights2 = { { getRand()},{getRand() },{ getRand()} }; // from hidden layer to output layer
-	std::vector<double> bias0 = { 1,1,1 };
-	std::vector<double> bias1 = { 1,1,1 }; // biases for  the hidden layer
-	std::vector<double> bias2 = {1 }; // bias for  the output layer
+	std::vector<double> bias0 = { getRand('b'),getRand('b'),getRand('b')};
+	std::vector<double> bias1 = { getRand('b'),getRand('b'),getRand('b') }; // biases for  the hidden layer
+	std::vector<double> bias2 = { getRand('b')}; // bias for  the output layer
 	
 	
-	for (int epoch = 0; epoch < 100000000; epoch++)
+	for (int epoch = 0; epoch < 1000000000; epoch++)
 	{
 		double error = 0;
 		for (std::vector<double> sample : train_and_test_samples)
@@ -315,7 +238,7 @@ int main()
 			weights0[1][2] -= lr * complete_error02 * input[1];
 
 		}
-		if (epoch % 1000 == 0)
+		if (epoch % 100 == 0)
 		{
 			std::string map;
 			int size = 50;
@@ -327,18 +250,22 @@ int main()
 					std::vector<double> h0 = forwardProp(&weights0, &val_input, &bias0);
 					std::vector<double> h1 = forwardProp(&weights1, &h0, &bias1);
 					std::vector<double> o = forwardProp(&weights2, &h1, &bias2); // in this senario just one value
-					std::vector<double> hidden_output0 = forwardProp(&weights0, &val_input, &bias0);
-					std::vector<double> hidden_output1 = forwardProp(&weights1, &hidden_output0, &bias1);
-					std::vector<double> output = forwardProp(&weights2, &hidden_output1, &bias2);
-					int index = m_max(0,o[0] * 67);
+					int index = (m_min(66,m_max(0, round(o[0] * 67))));
 					map += CHARMAP[index];
 					map += ' ';
 				}
 				map += "\n";
 			}
-			//Sleep(300);
+			Sleep(300);
 			system("cls");
 			std::cout << "Epoch: "<<epoch<<"\nError: "<<(error/train_and_test_samples.size()) << "\n" << map ;
+			for (int i = 0; i < weights2.size(); i++)
+			{
+				for (int j = 0; j < weights2[0].size(); j++)
+				{
+					std::cout << weights2[i][j] << "\n";
+				}
+			}
 		}
 	}
 }
