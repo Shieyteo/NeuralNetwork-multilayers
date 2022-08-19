@@ -145,7 +145,7 @@ int main()
 		}
 		if (epoch % 100 == 0)
 		{
-			Sleep(300);
+			//Sleep(300);
 			system("cls");
 			std::cout << "Epoch: "<<epoch<<"\nError: "<<(error / 4) << "\n" << map;
 		}
