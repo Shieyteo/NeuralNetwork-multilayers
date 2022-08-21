@@ -61,7 +61,11 @@ public:
 		{
 			for (int collumns = 0; collumns < data[rows].size(); collumns++)
 			{
-				data[rows][collumns] += add;
+				if (data[rows].size() != add.data[rows].size())
+				{
+					std::cout << "Not same size\n";
+				}
+				add[rows][collumns] +=  data[rows][collumns] + add.data[rows][collumns];
 			}
 		}
 	}
