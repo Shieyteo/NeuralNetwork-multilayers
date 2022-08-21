@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <windows.h>
+#include "_matrix.h"
 
 const static double LRELUC = 0.25;
 
@@ -137,8 +138,15 @@ void createDataSet(unsigned int number, float precision=0.05)
 	
 }
 
+void test()
+{
+	_Matrix thi(10, 11);
+	return;
+}
+
 int main()
 {
+	test();
 	srand(time(NULL)); // intialize rand
 	const double lr = 0.001;	//learning rate
 	createDataSet(1,0.2);
