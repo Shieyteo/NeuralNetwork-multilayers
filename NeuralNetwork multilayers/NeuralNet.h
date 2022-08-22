@@ -1,4 +1,6 @@
-#include "_matrix.h"
+#include "Activations.h"
+#include <vector>
+#include <tuple>
 #include <iostream>
 
 double derr(double a, double b)
@@ -15,18 +17,20 @@ public:
 	std::vector<std::vector<double>> errors;
 	std::vector<unsigned int> topo;
 	double lr;
-	double (*activation)(double);
-	double (*derivative_activation)(double);
-
+	std::vector<double (*)(double)> activations;
+	std::vector<double (*)(double)> derivative_activations;
 public:
-	Net(std::vector<unsigned int> topology, double learnrate, double (*activationFunc)(double), double (*derivative_activationFunc)(double))
+	Net(std::vector<std::tuple<unsigned int, Activation>> input, double learnrate)
 		:
-		lr(learnrate),
-		topo(topology),
-		activation(activationFunc),
-		derivative_activation(derivative_activationFunc)
+		lr(learnrate)
 	{
-		for (int i = 0; i < topology.size(); i++)
+		for (int i = 0; i < input.size(); i++)
+		{
+			topo.push_back(std::get<0>(input[i]));
+			activations.push_back(std::get<1>(input[i]).act);
+			derivative_activations.push_back(std::get<1>(input[i]).dact);
+		}
+		for (int i = 0; i < topo.size(); i++)
 		{
 			values.push_back({});
 			if (i != 0)
@@ -34,31 +38,31 @@ public:
 				bias.push_back({});
 			}
 			errors.push_back({});
-			for (int _ = 0; _ < topology[i]; _++)
+			for (int _ = 0; _ < topo[i]; _++)
 			{
 				values[i].push_back(0);
 				if (i != 0)
 				{
 					errors[i].push_back(0);
-					bias[i-1].push_back(_getRand());
+					bias[i-1].push_back(getRand());
 				}
 			}
 		}
-		for (int i = 0; i < topology.size()-1; i++)
+		for (int i = 0; i < topo.size()-1; i++)
 		{	
 			weights.push_back({});
-			for (int h = 0; h < topology[i]; h++)
+			for (int h = 0; h < topo[i]; h++)
 			{
 				weights[i].push_back({});
-				for (int g = 0; g < topology[i+1]; g++)
+				for (int g = 0; g < topo[i+1]; g++)
 				{
-					weights[i][h].push_back(_getRand());
+					weights[i][h].push_back(getRand());
 				}
 			}
 		}
 		std::cout << "Created Net sucessfuly\n";
 	}
-	std::vector<double> forwars_prop(std::vector<double> input)
+	std::vector<double> forawrd_prop(std::vector<double> input)
 	{
 		if (input.size()!= topo[0])
 		{
@@ -74,8 +78,7 @@ public:
 				{
 					sum += weights[layer][input][output] * values[layer][input];
 				}
-				//ret.push_back(Sigmoid(sum));
-				values[layer+1][output] = activation(sum);
+				values[layer+1][output] = activations[layer+1](sum);
 			}
 		}
 		return values[values.size() - 1];
@@ -87,7 +90,7 @@ public:
 		for (int i = 0; i < topo[topo.size()-1]; i++)
 		{
 			double d_err = derr(expected[i], values[values.size()-1][i]);
-			double d_act = derivative_activation(values[values.size() - 1][i]);
+			double d_act = derivative_activations[topo.size()-1](values[values.size() - 1][i]);
 			errors[topo.size()-1][i] = d_err * d_act;
 		}
 		for (int layer = values.size() -2; layer > 0; layer--)
@@ -99,7 +102,7 @@ public:
 				{
 					sum_basic_error += errors[layer + 1][prevErrorIndex]*weights[layer][ErrorIndex][prevErrorIndex];
 				}
-				double d_activation = derivative_activation(values[layer][ErrorIndex]);
+				double d_activation = derivative_activations[layer+1](values[layer][ErrorIndex]);
 				errors[layer][ErrorIndex] = sum_basic_error * d_activation;
 			}
 		}
@@ -114,41 +117,5 @@ public:
 				}
 			}
 		}
-		//Weight adjustment
-		//bias[]
-		//bias2[0] -= lr * complete_error20;
-
-		////weight adjustment
-		//weights2[0][0] -= lr * complete_error20 * hidden_layer_values1[0];
-		//weights2[1][0] -= lr * complete_error20 * hidden_layer_values1[1];
-
-		////bias adjustment
-		//bias1[0] -= lr * complete_error10;
-		//bias1[1] -= lr * complete_error11;
-		//bias1[2] -= lr * complete_error12;
-
-		////weight adjustment
-		//weights1[0][0] -= lr * complete_error10 * hidden_layer_values0[0];
-		//weights1[1][0] -= lr * complete_error10 * hidden_layer_values0[1];
-		//weights1[2][0] -= lr * complete_error10 * hidden_layer_values0[2];
-		//weights1[0][1] -= lr * complete_error11 * hidden_layer_values0[0];
-		//weights1[1][1] -= lr * complete_error11 * hidden_layer_values0[1];
-		//weights1[2][1] -= lr * complete_error11 * hidden_layer_values0[2];
-		//weights1[0][2] -= lr * complete_error12 * hidden_layer_values0[0];
-		//weights1[1][2] -= lr * complete_error12 * hidden_layer_values0[1];
-		//weights1[2][2] -= lr * complete_error12 * hidden_layer_values0[2];
-
-		////bias adjustment
-		//bias0[0] -= lr * complete_error00;
-		//bias0[1] -= lr * complete_error01;
-		//bias0[2] -= lr * complete_error02;
-
-		////weight adjustment
-		//weights0[0][0] -= lr * complete_error00 * input[0];
-		//weights0[1][0] -= lr * complete_error00 * input[1];
-		//weights0[0][1] -= lr * complete_error01 * input[0];
-		//weights0[1][1] -= lr * complete_error01 * input[1];
-		//weights0[0][2] -= lr * complete_error02 * input[0];
-		//weights0[1][2] -= lr * complete_error02 * input[1];
 	}
 };

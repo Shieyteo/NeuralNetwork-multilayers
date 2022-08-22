@@ -47,40 +47,50 @@ void createDataSet(unsigned int number, float precision=0.05)
 		}
 		return;
 	}
+	case 2:
+		for (double i = 0; i < 10; i++)
+		{
+			for (double j = 0; j < 10; j++)
+			{
+				train_and_test_samples.push_back({ i,j,i * j });
+			}
+		}
+		
 	}
 }
 
 int main()
 {
 	srand(time(NULL));
-	createDataSet(0,0.2);
-	Net network({ 2,100,70,60,10,1 }, 0.1, Sigmoid, derivative_Sigmoid);
+	createDataSet(0,0.1);
+	//train_and_test_samples = { {1,0,0},{1,1,1},{0,1,0},{0,0,1} };
+	Net network({ {2,NON},{10,ELU},{10,ELU},{1,SIGMOID}}, 0.001);
 	for (int epoch = 0; epoch < 1000000; epoch++)
 	{
 		double err = 0;
-		for (std::vector<double> sample: train_and_test_samples)
+		for (std::vector<double> sample : train_and_test_samples)
 		{
-			std::vector<double> output = network.forwars_prop({ sample[0],sample[1] });
+			std::vector<double> output = network.forawrd_prop({ sample[0],sample[1] });
 			err += abs(sample[2] - output[0]);
 			network.back_prop({ sample[2] });
 		}
-		if (epoch % 100 == 0)
+		if (epoch % 50 == 0)
 		{
 			std::string map;
-			int size = 50;
+			int size = 40;
 			for (float i = size - 1; i > -1; i--)
 			{
 				for (float j = 0; j < size; j++)
 				{
 					std::vector<double> val_input = { i / size,j / size };
-					std::vector<double> o = network.forwars_prop(val_input);
+					std::vector<double> o = network.forawrd_prop(val_input);
 					int index = (m_min(66, m_max(0, round(o[0] * 67))));
 					map += CHARMAP[index];
 					map += ' ';
 				}
 				map += "\n";
 			}
-			Sleep(300);
+			Sleep(100);
 			system("cls");
 			std::cout << "Epoch: " << epoch << "\nError: " << (err / train_and_test_samples.size()) << "\n" << map;
 		}
