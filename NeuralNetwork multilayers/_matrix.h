@@ -12,7 +12,7 @@ private:
 	std::vector<std::vector<double>> data;
 
 public:
-	_Matrix(unsigned int length, unsigned int height, bool fillrandom = true)
+	_Matrix(unsigned int height, unsigned int length, bool fillrandom = true)
 	{
 		data = std::vector<std::vector<double>>(height, std::vector<double>(length, 0));
 		if (fillrandom)
@@ -25,6 +25,10 @@ public:
 				}
 			}
 		}
+	}
+	std::vector<double>* operator[](int num)
+	{
+		return &data.at(num);
 	}
 	_Matrix operator*(double scalar)
 	{
@@ -65,8 +69,48 @@ public:
 				{
 					std::cout << "Not same size\n";
 				}
-				add[rows][collumns] +=  data[rows][collumns] + add.data[rows][collumns];
+				copy.data[rows][collumns] =  data[rows][collumns] + add.data[rows][collumns];
 			}
+		}
+		return copy;
+	}
+	_Matrix operator<<(_Matrix multiplicator)
+	{
+		_Matrix firstsum(data.size(),multiplicator.data[0].size());
+		for (int i = 0; i < data.size(); i++)
+		{
+			for (int j = 0; j < multiplicator.data[0].size(); j++)
+			{
+				double sum = 0;
+				for (int k = 0; k < multiplicator.data.size(); k++)
+				{
+					sum += data[i][k] * multiplicator.data[k][j];
+				}
+				firstsum.data[i][j] = sum;
+			}
+		}
+		return firstsum;
+	}
+	///applies function to matrix
+	void apply(double (*func)(double))
+	{
+		for (int i = 0; i < data.size(); i++)
+		{
+			for (int j = 0; j < data[i].size(); j++)
+			{
+				data[i][j] = func(data[i][j]);
+			}
+		}
+	}
+	void print()
+	{
+		for (std::vector<double> row: data)
+		{
+			for (double item: row)
+			{
+				std::cout << item << ' ';
+			}
+			std::cout << '\n';
 		}
 	}
 };

@@ -140,14 +140,19 @@ void createDataSet(unsigned int number, float precision=0.05)
 
 void test()
 {
-	_Matrix thi(10, 11);
+	_Matrix thi(2, 5);
+	_Matrix tho(5, 3);
+	auto nw = thi << tho;
+	nw.print();
+	std::cin.get();
 	return;
 }
 
 int main()
 {
-	test();
+	
 	srand(time(NULL)); // intialize rand
+	test();
 	const double lr = 0.001;	//learning rate
 	createDataSet(1,0.2);
 	//train_and_test_samples = { {1,1,1},{0,1,0},{1,0,0},{0,0,1} };
