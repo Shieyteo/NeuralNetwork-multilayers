@@ -8,6 +8,7 @@ double derr(double a, double b)
 
 class Net
 {
+public:
 	std::vector<std::vector<std::vector<double>>> weights;
 	std::vector<std::vector<double>> bias;
 	std::vector<std::vector<double>> values;
@@ -28,7 +29,10 @@ public:
 		for (int i = 0; i < topology.size(); i++)
 		{
 			values.push_back({});
-			bias.push_back({});
+			if (i != 0)
+			{
+				bias.push_back({});
+			}
 			errors.push_back({});
 			for (int _ = 0; _ < topology[i]; _++)
 			{
@@ -36,7 +40,7 @@ public:
 				if (i != 0)
 				{
 					errors[i].push_back(0);
-					bias[i].push_back(_getRand());
+					bias[i-1].push_back(_getRand());
 				}
 			}
 		}
@@ -60,11 +64,12 @@ public:
 		{
 			std::cout << "Non valid input got " << input.size() << "  expected " << values[0].size() << "\n";
 		}
+		values[0]=input;
 		for (int layer = 0; layer < topo.size()-1; layer++)
 		{
 			for (int output = 0; output < values[layer+1].size(); output++)
 			{
-				double sum = bias[layer + 1][output];
+				double sum = bias[layer][output];
 				for (int input = 0; input < topo[layer]; input++)
 				{
 					sum += weights[layer][input][output] * values[layer][input];
@@ -98,14 +103,14 @@ public:
 				errors[layer][ErrorIndex] = sum_basic_error * d_activation;
 			}
 		}
-		for (int layer = 1; layer < topo.size()-1; layer++)
+		for (int layer = 0; layer < topo.size()-1; layer++)
 		{
-			for (int to = 0; to < topo[layer + 1]; to++)
+			for (int to = 0; to < topo[layer+1]; to++)
 			{
-				bias[layer][to] -= lr + errors[layer][to];
+				bias[layer][to] -= lr * errors[layer+1][to];
 				for (int from = 0; from < topo[layer]; from++)
 				{
-					weights[layer-1][from][to] -= lr * errors[layer][to] * values[layer][to];
+					weights[layer][from][to] -= lr * errors[layer+1][to] * values[layer][from];
 				}
 			}
 		}

@@ -59,9 +59,9 @@ double derivative_Error(double a, double b)
 	return 2 * (b - a); //derivative of (a-b)^2
 }
 
-static double (*activation)(double) { &ReLU};
+static double (*activation)(double) { Sigmoid};
 
-static double (*derivative_activation)(double) { &derivative_ReLU};
+static double (*derivative_activation)(double) { derivative_Sigmoid};
 
 double getRand(char c = 'w')
 {
@@ -138,35 +138,57 @@ void createDataSet(unsigned int number, float precision=0.05)
 	}
 	
 }
-
+/*
+std::vector<std::vector<double>> weights0 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()} };
+	std::vector<std::vector<double>> weights1 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()},{ getRand(),getRand(),getRand() } }; // from input layer to hidden layer
+	std::vector<std::vector<double>> weights2 = { { getRand()},{getRand() },{ getRand()} }; // from hidden layer to output layer
+	std::vector<double> bias0 = { getRand('b'),getRand('b'),getRand('b') };
+	std::vector<double> bias1 = { getRand('b'),getRand('b'),getRand('b') }; // biases for  the hidden layer
+	std::vector<double> bias2 = { getRand('b') }; // bias for  the output layer
+*/
 int main()
 {
 	
-	srand(time(NULL)); // intialize rand
-	const double lr = 0.01;	//learning rate
+	srand(10); // intialize rand
+	const double lr = 0.1;	//learning rate
 	createDataSet(1,0.2);
+	//train_and_test_samples = { {1,1,1},{1,0,1},{0,1,0},{0,0,0} };
 	Net network({ 2,3,3,1 }, lr, Sigmoid, derivative_Sigmoid);
-	for (int epoch = 0; epoch < 100000; epoch++)
+
+
+	for (int epoch = 0; epoch < 1000000; epoch++)
 	{
+		double err = 0;
 		for (std::vector<double> sample: train_and_test_samples)
 		{
 			std::vector<double> output = network.forwars_prop({ sample[0],sample[1] });
+			err += output[0];
 			network.back_prop({ sample[2] });
-			system("cls");
-			std::cout << "Output: " << output[0] << " Expected: " << sample[2];
 		}
-
+		if (epoch % 100 == 0)
+		{
+			std::string map;
+			int size = 50;
+			for (float i = size - 1; i > -1; i--)
+			{
+				for (float j = 0; j < size; j++)
+				{
+					std::vector<double> val_input = { i / size,j / size };
+					std::vector<double> o = network.forwars_prop(val_input);
+					int index = (m_min(66, m_max(0, round(o[0] * 67))));
+					map += CHARMAP[index];
+					map += ' ';
+				}
+				map += "\n";
+			}
+			Sleep(300);
+			system("cls");
+			std::cout << "Epoch: " << epoch << "\nError: " << (err / train_and_test_samples.size()) << "\n" << map;
+		}
 	}
-
-	return 0;
 	//train_and_test_samples = { {1,1,1},{0,1,0},{1,0,0},{0,0,1} };
 	//initiate weights and biases
-	std::vector<std::vector<double>> weights0 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()} };
-	std::vector<std::vector<double>> weights1 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()},{ getRand(),getRand(),getRand() } }; // from input layer to hidden layer 
-	std::vector<std::vector<double>> weights2 = { { getRand()},{getRand() },{ getRand()} }; // from hidden layer to output layer
-	std::vector<double> bias0 = { getRand('b'),getRand('b'),getRand('b')};
-	std::vector<double> bias1 = { getRand('b'),getRand('b'),getRand('b') }; // biases for  the hidden layer
-	std::vector<double> bias2 = { getRand('b')}; // bias for  the output layer
+	
 	
 	
 	for (int epoch = 0; epoch < 1000000000; epoch++)
