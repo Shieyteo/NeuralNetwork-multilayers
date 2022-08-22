@@ -138,22 +138,22 @@ void createDataSet(unsigned int number, float precision=0.05)
 	}
 	
 }
-/*
+
 std::vector<std::vector<double>> weights0 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()} };
-	std::vector<std::vector<double>> weights1 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()},{ getRand(),getRand(),getRand() } }; // from input layer to hidden layer
-	std::vector<std::vector<double>> weights2 = { { getRand()},{getRand() },{ getRand()} }; // from hidden layer to output layer
-	std::vector<double> bias0 = { getRand('b'),getRand('b'),getRand('b') };
-	std::vector<double> bias1 = { getRand('b'),getRand('b'),getRand('b') }; // biases for  the hidden layer
-	std::vector<double> bias2 = { getRand('b') }; // bias for  the output layer
-*/
+std::vector<std::vector<double>> weights1 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()},{ getRand(),getRand(),getRand() } }; // from input layer to hidden layer
+std::vector<std::vector<double>> weights2 = { { getRand()},{getRand() },{ getRand()} }; // from hidden layer to output layer
+std::vector<double> bias0 = { getRand('b'),getRand('b'),getRand('b') };
+std::vector<double> bias1 = { getRand('b'),getRand('b'),getRand('b') }; // biases for  the hidden layer
+std::vector<double> bias2 = { getRand('b') }; // bias for  the output layer
+
 int main()
 {
 	
-	srand(10); // intialize rand
+	srand(time(NULL)); // intialize rand
 	const double lr = 0.1;	//learning rate
 	createDataSet(1,0.2);
 	//train_and_test_samples = { {1,1,1},{1,0,1},{0,1,0},{0,0,0} };
-	Net network({ 2,3,3,1 }, lr, Sigmoid, derivative_Sigmoid);
+	Net network({ 2,10,5,1 }, 0.05, tanh, derivative_tanh);
 
 
 	for (int epoch = 0; epoch < 1000000; epoch++)
@@ -165,7 +165,7 @@ int main()
 			err += output[0];
 			network.back_prop({ sample[2] });
 		}
-		if (epoch % 100 == 0)
+		if (epoch % 50 == 0)
 		{
 			std::string map;
 			int size = 50;
@@ -188,7 +188,7 @@ int main()
 	}
 	//train_and_test_samples = { {1,1,1},{0,1,0},{1,0,0},{0,0,1} };
 	//initiate weights and biases
-	
+	return 0;
 	
 	
 	for (int epoch = 0; epoch < 1000000000; epoch++)
