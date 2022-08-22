@@ -113,4 +113,16 @@ public:
 			std::cout << '\n';
 		}
 	}
+	_Matrix operator !()
+	{
+		_Matrix temp(data[0].size(), data.size());
+		for (size_t i = 0; i < data.size(); i++)
+		{
+			for (size_t j = 0; j < data[i].size(); j++)
+			{
+				temp.data[j][i] = data[i][j];
+			}
+		}
+		return temp;
+	}
 };

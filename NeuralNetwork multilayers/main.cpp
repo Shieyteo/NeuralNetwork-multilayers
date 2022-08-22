@@ -3,6 +3,7 @@
 #include <string>
 #include <windows.h>
 #include "_matrix.h"
+#include "NeuralNet.h"
 
 const static double LRELUC = 0.25;
 
@@ -138,23 +139,26 @@ void createDataSet(unsigned int number, float precision=0.05)
 	
 }
 
-void test()
-{
-	_Matrix thi(2, 5);
-	_Matrix tho(5, 3);
-	auto nw = thi << tho;
-	nw.print();
-	std::cin.get();
-	return;
-}
-
 int main()
 {
 	
 	srand(time(NULL)); // intialize rand
-	test();
-	const double lr = 0.001;	//learning rate
+	const double lr = 0.01;	//learning rate
 	createDataSet(1,0.2);
+	Net network({ 2,3,3,1 }, lr, Sigmoid, derivative_Sigmoid);
+	for (int epoch = 0; epoch < 100000; epoch++)
+	{
+		for (std::vector<double> sample: train_and_test_samples)
+		{
+			std::vector<double> output = network.forwars_prop({ sample[0],sample[1] });
+			network.back_prop({ sample[2] });
+			system("cls");
+			std::cout << "Output: " << output[0] << " Expected: " << sample[2];
+		}
+
+	}
+
+	return 0;
 	//train_and_test_samples = { {1,1,1},{0,1,0},{1,0,0},{0,0,1} };
 	//initiate weights and biases
 	std::vector<std::vector<double>> weights0 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()} };
