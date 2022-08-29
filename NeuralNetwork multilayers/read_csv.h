@@ -32,7 +32,7 @@ void read(std::vector<std::vector<double>>* data, std::vector<std::vector<double
 		}
 		int dsize = data->size() - 1;
 		data->at(dsize).push_back(atoi(buffer.c_str()));
-		expected->push_back(std::vector<double>(10,0));
+		expected->push_back(std::vector<double>(10,-1));
 		expected->at(expected->size() - 1)[int(data->at(dsize)[0])] = 1;
 		data->at(dsize).erase(data->at(dsize).begin());
 	}

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <windows.h>
+//#include "NerualNetwork.h"
 #include "NeuralNet.h"
 #include "Activations.h"
 #include "read_csv.h"
@@ -129,13 +130,10 @@ int main()
 	std::vector<std::vector<double>> data;
 	std::vector< std::vector<double>> expected;
 	read(&data, &expected);
-	for (int i = 0; i < 10; i++)
-	{
-		show(expected[4+i]);
-	}
-	Net network({ {784,NON},{20,SIGMOID},{20,SIGMOID},{10,SIGMOID} }, 0.1);
+	Net network({ {784,NON},{100,TANH},{10,TANH} }, 0.002);
+	//Network NW({ {784,NON},{200,TANH},{10,TANH}}, 0.002);
 	system("cls");
-	for (int epochs = 0; epochs < 60000; epochs++)
+	for (int epochs = 0; epochs < 1000; epochs++)
 	{	
 		for (int sample_index = 0; sample_index < data.size();sample_index++)
 		{
@@ -143,17 +141,19 @@ int main()
 			network.back_prop(expected[sample_index]);
 		}
 		//test
-		if (epochs%5==0)
+		double error = 0;
+		for (int test = 0; test < 20000; test++)
 		{
-			int test_index = float(rand()) / RAND_MAX * data.size();
-			std::vector<double> output = network.forawrd_prop(data[test_index]);
-			system("cls");
-			std::cout << "Actual : ";
-			show(output);
-			std::cout << "Expected : ";
-			show(expected[test_index]);
-			std::cout << "Act:"<<argmax(output) << " Exp:" << argmax(expected[test_index]) << "\n";
+			std::vector<double> output = network.forawrd_prop(data[test]);
+			if (argmax(output) != argmax(expected[test]))
+			{
+				error++;
+			}
 		}
+		std::cout<<"Epoch: "<<epochs<<"\n";
+		std::cout<<"Error: " << error / 20000 << "\n";
 	}
+	
+	std::cin.get();
 	return 0;
 }

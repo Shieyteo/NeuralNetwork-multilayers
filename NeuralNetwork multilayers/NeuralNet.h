@@ -16,27 +16,26 @@ public:
 	std::vector<std::vector<double>> values;
 	std::vector<std::vector<double>> errors;
 	std::vector<unsigned int> topo;
+	int layerNum;
 	double lr;
 	std::vector<double (*)(double)> activations;
 	std::vector<double (*)(double)> derivative_activations;
 public:
 	Net(std::vector<std::tuple<unsigned int, Activation>> input, double learnrate)
 		:
+		layerNum(input.size()),
 		lr(learnrate)
 	{
-		for (int i = 0; i < input.size(); i++)
+		for (int i = 0; i < layerNum; i++)
 		{
 			topo.push_back(std::get<0>(input[i]));
 			activations.push_back(std::get<1>(input[i]).act);
 			derivative_activations.push_back(std::get<1>(input[i]).dact);
 		}
-		for (int i = 0; i < topo.size(); i++)
+		for (int i = 0; i < layerNum; i++)
 		{
 			values.push_back({});
-			if (i != 0)
-			{
-				bias.push_back({});
-			}
+			bias.push_back({});
 			errors.push_back({});
 			for (int _ = 0; _ < topo[i]; _++)
 			{
@@ -44,11 +43,11 @@ public:
 				if (i != 0)
 				{
 					errors[i].push_back(0);
-					bias[i-1].push_back(getRand());
+					bias[i].push_back(getRand());
 				}
 			}
 		}
-		for (int i = 0; i < topo.size()-1; i++)
+		for (int i = 0; i < layerNum -1; i++)
 		{	
 			weights.push_back({});
 			for (int h = 0; h < topo[i]; h++)
@@ -69,11 +68,11 @@ public:
 			std::cout << "Non valid input got " << input.size() << "  expected " << values[0].size() << "\n";
 		}
 		values[0]=input;
-		for (int layer = 0; layer < topo.size()-1; layer++)
+		for (int layer = 0; layer < layerNum -1; layer++)
 		{
 			for (int output = 0; output < values[layer+1].size(); output++)
 			{
-				double sum = bias[layer][output];
+				double sum = bias[layer+1][output];
 				for (int input = 0; input < topo[layer]; input++)
 				{
 					sum += weights[layer][input][output] * values[layer][input];
@@ -87,13 +86,13 @@ public:
 	/// Expects already forward proped network
 	void back_prop(std::vector<double> expected)
 	{
-		for (int i = 0; i < topo[topo.size()-1]; i++)
+		for (int i = 0; i < topo[layerNum -1]; i++)
 		{
-			double d_err = derr(expected[i], values[values.size()-1][i]);
-			double d_act = derivative_activations[topo.size()-1](values[values.size() - 1][i]);
-			errors[topo.size()-1][i] = d_err * d_act;
+			double d_err = derr(expected[i], values[layerNum -1][i]);
+			double d_act = derivative_activations[layerNum -1](values[layerNum - 1][i]);
+			errors[layerNum -1][i] = d_err * d_act;
 		}
-		for (int layer = values.size() -2; layer > 0; layer--)
+		for (int layer = layerNum -2; layer > 0; layer--)
 		{
 			for (int ErrorIndex = 0; ErrorIndex < topo[layer]; ErrorIndex++)
 			{
@@ -106,11 +105,11 @@ public:
 				errors[layer][ErrorIndex] = sum_basic_error * d_activation;
 			}
 		}
-		for (int layer = 0; layer < topo.size()-1; layer++)
+		for (int layer = 0; layer < layerNum -1; layer++)
 		{
 			for (int to = 0; to < topo[layer+1]; to++)
 			{
-				bias[layer][to] -= lr * errors[layer+1][to];
+				bias[layer + 1][to] -= lr * errors[layer+1][to];
 				for (int from = 0; from < topo[layer]; from++)
 				{
 					weights[layer][from][to] -= lr * errors[layer+1][to] * values[layer][from];
