@@ -1,10 +1,62 @@
 #pragma once
 #include <math.h>
+#include <vector>
 #include <iostream>
 
 static const double LRELUC = 0.25;
 
-double non(double a) { std::cout << "Illegal \n"; return a; }
+void nona(std::vector<double>& a) {}
+std::vector<double> nond(std::vector<double>& a) { return a; }
+
+void Sigmoid(std::vector<double>& inp)
+{
+	for (int i = 0; i < inp.size(); i++)
+	{
+		inp[i] = 1 / (1 + exp(-inp[i]));
+	}
+}
+
+std::vector<double> dSigmoid(std::vector<double>& inp)
+{
+	std::vector<double> ret = std::vector<double>(inp.size());
+	for (int i = 0; i < inp.size(); i++)
+	{
+		ret[i] = inp[i] * (1 - inp[i]);
+	}
+	return ret;
+}
+
+void Tanh(std::vector<double>& inp)
+{
+	for (int i = 0; i < inp.size(); i++)
+	{
+		inp[i] = tanh(inp[i]);
+	}
+}
+
+std::vector<double> dTanh(std::vector<double>& inp)
+{
+	std::vector<double> ret = std::vector<double>(inp.size());
+	for (int i = 0; i < inp.size(); i++)
+	{
+		double e = tanh(inp[i]);
+		ret[i] = 1 - e*e;
+	}
+	return ret;
+}
+
+void Softmax(std::vector<double>& inp)
+{
+	double sum = 0;
+	for (int i = 0; i < inp.size(); i++)
+	{
+		sum += exp(inp[i]);
+	}
+	for (int i = 0; i < inp.size(); i++)
+	{
+		inp[i] = exp(inp[i])/sum;
+	}
+}
 
 double getRand()
 {
@@ -21,10 +73,10 @@ double m_min(double a, double b)
 	return a < b ? a : b;
 }
 
-double Sigmoid(double inp)
-{
-	return 1 / (1 + exp(-inp));
-}
+//double Sigmoid(double inp)
+//{
+//	return 1 / (1 + exp(-inp));
+//}
 
 double elu(double inp)
 {
@@ -80,18 +132,22 @@ double derivative_tanh(double b)
 class Activation
 {
 public:
-	double (*act)(double);
-	double (*dact)(double);
-	Activation(double (*actFunc)(double), double (*dactFunc)(double))
+	void (*act)(std::vector<double>&);
+	std::vector<double>(*dact)(std::vector<double>&);
+	Activation(void (*actFunc)(std::vector<double>&), std::vector<double>(*dactFunc)(std::vector<double>&))
 		:
 		act(actFunc),
 		dact(dactFunc)
 	{}
 };
 
-Activation TANH(tanh, derivative_tanh);
-Activation SIGMOID(Sigmoid, derivative_Sigmoid);
+Activation TANH(Tanh, dTanh);
+Activation SIGMOID(Sigmoid, dSigmoid);
+Activation NON(nona, nond);
+//Activation SOFTMAX(Softmax, dSoftmax);
+/*
 Activation RELU(ReLU, derivative_ReLU);
 Activation LEAKYRELU(LeakyReLU, derivative_LeakyReLU);
 Activation NON(non, non);
 Activation ELU(elu, derivative_elu);
+*/

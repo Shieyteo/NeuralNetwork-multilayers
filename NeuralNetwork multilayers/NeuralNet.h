@@ -18,8 +18,8 @@ public:
 	std::vector<unsigned int> topo;
 	int layerNum;
 	double lr;
-	std::vector<double (*)(double)> activations;
-	std::vector<double (*)(double)> derivative_activations;
+	std::vector<void (*)(std::vector<double>&)> activations;
+	std::vector<std::vector<double> (*)(std::vector<double>&)> derivative_activations;
 public:
 	Net(std::vector<std::tuple<unsigned int, Activation>> input, double learnrate)
 		:
@@ -63,10 +63,6 @@ public:
 	}
 	std::vector<double> forawrd_prop(std::vector<double> input)
 	{
-		if (input.size()!= topo[0])
-		{
-			std::cout << "Non valid input got " << input.size() << "  expected " << values[0].size() << "\n";
-		}
 		values[0]=input;
 		for (int layer = 0; layer < layerNum -1; layer++)
 		{
@@ -77,23 +73,40 @@ public:
 				{
 					sum += weights[layer][input][output] * values[layer][input];
 				}
-				values[layer+1][output] = activations[layer+1](sum);
+				values[layer+1][output] = sum;
 			}
+			activations[layer + 1](values[layer + 1]);
 		}
 		return values[values.size() - 1];
 	}
 
-	/// Expects already forward proped network
-	void back_prop(std::vector<double> expected)
+	void weightsupdate()
 	{
+		for (int layer = 0; layer < layerNum - 1; layer++)
+		{
+			for (int to = 0; to < topo[layer + 1]; to++)
+			{
+				bias[layer + 1][to] -= lr * errors[layer + 1][to];
+				for (int from = 0; from < topo[layer]; from++)
+				{
+					weights[layer][from][to] -= lr * errors[layer + 1][to] * values[layer][from];
+				}
+			}
+		}
+	}
+
+	/// Expects already forward proped network
+	std::vector<std::vector<double>> back_prop(std::vector<double> expected,bool updateWeights = true)
+	{
+		std::vector<double> d_act = derivative_activations[layerNum - 1](values[layerNum - 1]);
 		for (int i = 0; i < topo[layerNum -1]; i++)
 		{
 			double d_err = derr(expected[i], values[layerNum -1][i]);
-			double d_act = derivative_activations[layerNum -1](values[layerNum - 1][i]);
-			errors[layerNum -1][i] = d_err * d_act;
+			errors[layerNum -1][i] = d_err * d_act[i];
 		}
 		for (int layer = layerNum -2; layer > 0; layer--)
 		{
+			std::vector<double> d_activation = derivative_activations[layer + 1](values[layer]);
 			for (int ErrorIndex = 0; ErrorIndex < topo[layer]; ErrorIndex++)
 			{
 				double sum_basic_error = 0;
@@ -101,20 +114,13 @@ public:
 				{
 					sum_basic_error += errors[layer + 1][prevErrorIndex]*weights[layer][ErrorIndex][prevErrorIndex];
 				}
-				double d_activation = derivative_activations[layer+1](values[layer][ErrorIndex]);
-				errors[layer][ErrorIndex] = sum_basic_error * d_activation;
+				errors[layer][ErrorIndex] = sum_basic_error * d_activation[ErrorIndex];
 			}
 		}
-		for (int layer = 0; layer < layerNum -1; layer++)
+		if (updateWeights)
 		{
-			for (int to = 0; to < topo[layer+1]; to++)
-			{
-				bias[layer + 1][to] -= lr * errors[layer+1][to];
-				for (int from = 0; from < topo[layer]; from++)
-				{
-					weights[layer][from][to] -= lr * errors[layer+1][to] * values[layer][from];
-				}
-			}
+			weightsupdate();
 		}
+		return errors;
 	}
 };

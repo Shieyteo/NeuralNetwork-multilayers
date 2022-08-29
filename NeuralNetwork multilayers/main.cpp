@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
+#include <algorithm>
+#include <random>
 #include <windows.h>
-//#include "NerualNetwork.h"
+#include <thread>
 #include "NeuralNet.h"
 #include "Activations.h"
 #include "read_csv.h"
@@ -34,6 +36,26 @@ int argmax(std::vector<T> findMax)
 		}
 	}
 	return index;
+}
+
+std::vector<std::vector<double>> average(std::vector < std::vector<std::vector<double>>>& inp)
+{
+	std::vector<std::vector<double>> ret;
+	for (int i = 0; i < inp[0].size(); i++)
+	{
+		std::vector<double> temp;
+		for (int j = 0; j < inp[0][0].size(); j++)
+		{
+			double sum = 0;
+			for (int k = 0; k < inp.size(); k++)
+			{
+				sum += inp[k][i][j];
+			}
+			temp.push_back(sum / inp.size());
+		}
+		ret.push_back(temp);
+	}
+	return ret;
 }
 
 void createDataSet(unsigned int number, float precision=0.05)
@@ -84,14 +106,68 @@ void createDataSet(unsigned int number, float precision=0.05)
 				train_and_test_samples.push_back({ i,j,i * j });
 			}
 		}
-		
 	}
+}
+
+void predict(Net* network, std::vector<std::vector<double>> input)
+{
+	for (int i = 0; i < 784; i++)
+	{
+		std::cout << input[0][i];
+		if (input[0][i] / 10 <= 1)
+		{
+			std::cout << 0;
+		}
+		if (input[0][i] / 10 <= 10)
+		{
+			std::cout << 0;
+		}
+		if (i % 28 == 27)
+		{
+			std::cout << "\n";
+		}
+	}
+	std::cout << "predicted: " << argmax(network->forawrd_prop(input[0])) << '\n';
 }
 
 int main()
 {
 	
 	srand(time(NULL));
+		
+	std::vector<std::vector<std::vector<double>>> data;
+	read(&data);
+
+	Net network({ {784,NON},{400,TANH},{200,TANH},{10,TANH}}, 0.003);
+	int sampleSize = data.size();
+
+	for (int epochs = 0; epochs < 10; epochs++)
+	{	
+		std::vector<unsigned int> range;
+		double error = 0;
+		for (int i = 0; i < sampleSize; i++)
+		{
+			range.push_back(i);
+		}
+		auto rng = std::default_random_engine{};
+		std::shuffle(std::begin(range), std::end(range), rng);
+		
+		for (int sample_index = 0; sample_index < range.size(); sample_index++)
+		{
+			std::vector<double> output = network.forawrd_prop(data[range[sample_index]][0]);
+			if (argmax(output) != argmax(data[range[sample_index]][1]))
+				error++;
+
+			network.back_prop(data[range[sample_index]][1], true);
+		}
+		std::cout<<"Epoch: " << epochs << "\n";
+		std::cout<<"Error: " << error / sampleSize << "\n";
+	}
+	while (std::cin.get())
+	{
+		predict(&network, data[rand()]);
+	}
+	return 0;
 	/*
 	createDataSet(0,0.1);
 	//train_and_test_samples = { {1,0,0},{1,1,1},{0,1,0},{0,0,1} };
@@ -127,33 +203,4 @@ int main()
 		}
 	}
 	*/
-	std::vector<std::vector<double>> data;
-	std::vector< std::vector<double>> expected;
-	read(&data, &expected);
-	Net network({ {784,NON},{100,TANH},{10,TANH} }, 0.002);
-	//Network NW({ {784,NON},{200,TANH},{10,TANH}}, 0.002);
-	system("cls");
-	for (int epochs = 0; epochs < 1000; epochs++)
-	{	
-		for (int sample_index = 0; sample_index < data.size();sample_index++)
-		{
-			network.forawrd_prop(data[sample_index]);
-			network.back_prop(expected[sample_index]);
-		}
-		//test
-		double error = 0;
-		for (int test = 0; test < 20000; test++)
-		{
-			std::vector<double> output = network.forawrd_prop(data[test]);
-			if (argmax(output) != argmax(expected[test]))
-			{
-				error++;
-			}
-		}
-		std::cout<<"Epoch: "<<epochs<<"\n";
-		std::cout<<"Error: " << error / 20000 << "\n";
-	}
-	
-	std::cin.get();
-	return 0;
 }
