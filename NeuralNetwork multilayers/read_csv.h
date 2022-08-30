@@ -42,6 +42,30 @@ DWORD WINAPI loadVectorsfromString(void* para) {
 	return 0;
 };
 
+void read_ppm(std::string path)
+{
+	std::ifstream file;
+	file.open(path, std::ios::binary);
+	std::string buffer;
+	std::getline(file, buffer);
+	std::vector<std::vector<int>> colorArray;
+	for (int i = 0; i < buffer.size(); i+=3)
+	{
+		colorArray.push_back({ buffer[i],buffer[i + 1],buffer[i + 2] });
+	}
+	return;
+	std::getline(file, buffer);
+	if (buffer!="28 28")
+	{
+		std::cout << "Wrong dimensions\n";
+	}
+	std::getline(file,buffer);
+	if (buffer != "255")
+	{
+		std::cout << "Wrong dimensions\n";
+	}
+
+}
 
 void read(std::vector<std::vector<std::vector<double>>>* input)
 {

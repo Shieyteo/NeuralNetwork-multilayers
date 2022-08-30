@@ -109,6 +109,18 @@ void createDataSet(unsigned int number, float precision=0.05)
 	}
 }
 
+std::vector<unsigned int> create_range(int to)
+{
+	std::vector<unsigned int> range;
+	for (int i = 0; i < to; i++)
+	{
+		range.push_back(i);
+	}
+	auto rng = std::default_random_engine{};
+	std::shuffle(std::begin(range), std::end(range), rng);
+	return range;
+}
+
 void predict(Net* network, std::vector<std::vector<double>> input)
 {
 	for (int i = 0; i < 784; i++)
@@ -127,80 +139,48 @@ void predict(Net* network, std::vector<std::vector<double>> input)
 			std::cout << "\n";
 		}
 	}
-	std::cout << "predicted: " << argmax(network->forawrd_prop(input[0])) << '\n';
+	std::chrono::time_point<std::chrono::system_clock> start;
+	start = std::chrono::system_clock::now();
+
+	int a =  argmax(network->forawrd_prop(input[0]));
+
+	std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - start;
+	std::cout << "predicted: " << a << "\n";
+	std::cout << "Predicted img in " << elapsed_seconds.count() << "s\n";
+	
 }
 
 int main()
 {
-	
 	srand(time(NULL));
-		
+	read_ppm("C:/Users/TH/source/repos/Shieyteo/NeuralNetwork-multilayers/test.ppm");
 	std::vector<std::vector<std::vector<double>>> data;
-	read(&data);
+	Net network({ {784,"non"},{100,"tanh"},{100,"tanh"},{10,"tanh"}}, 0.003);
 
-	Net network({ {784,NON},{400,TANH},{200,TANH},{10,TANH}}, 0.003);
+	read(&data);
 	int sampleSize = data.size();
 
-	for (int epochs = 0; epochs < 10; epochs++)
+	for (int epochs = 0; epochs < 5; epochs++)
 	{	
-		std::vector<unsigned int> range;
 		double error = 0;
-		for (int i = 0; i < sampleSize; i++)
+		for (int index: create_range(sampleSize))
 		{
-			range.push_back(i);
-		}
-		auto rng = std::default_random_engine{};
-		std::shuffle(std::begin(range), std::end(range), rng);
-		
-		for (int sample_index = 0; sample_index < range.size(); sample_index++)
-		{
-			std::vector<double> output = network.forawrd_prop(data[range[sample_index]][0]);
-			if (argmax(output) != argmax(data[range[sample_index]][1]))
-				error++;
+			std::vector<double> output = network.forawrd_prop(data[index][0]);	// forward prop
+			if (argmax(output) != argmax(data[index][1]))						// check results
+				error++;														// calc display error
 
-			network.back_prop(data[range[sample_index]][1], true);
+			network.back_prop(data[index][1]);									// train
 		}
 		std::cout<<"Epoch: " << epochs << "\n";
 		std::cout<<"Error: " << error / sampleSize << "\n";
 	}
+
+	network.save("../../here");
+	Net newNet = Net::load("../../here");
 	while (std::cin.get())
 	{
-		predict(&network, data[rand()]);
+
+		predict(&newNet, data[rand()]);
 	}
 	return 0;
-	/*
-	createDataSet(0,0.1);
-	//train_and_test_samples = { {1,0,0},{1,1,1},{0,1,0},{0,0,1} };
-	Net network({ {2,NON},{10,SIGMOID},{10,SIGMOID},{1,SIGMOID}}, 0.1);
-	for (int epoch = 0; epoch < 1000000; epoch++)
-	{
-		double err = 0;
-		for (std::vector<double> sample : train_and_test_samples)
-		{
-			std::vector<double> output = network.forawrd_prop({ sample[0],sample[1] });
-			err += abs(sample[2] - output[0]);
-			network.back_prop({ sample[2] });
-		}
-		if (epoch % 50 == 0)
-		{
-			std::string map;
-			int size = 40;
-			for (float i = size - 1; i > -1; i--)
-			{
-				for (float j = 0; j < size; j++)
-				{
-					std::vector<double> val_input = { i / size,j / size };
-					std::vector<double> o = network.forawrd_prop(val_input);
-					int index = (m_min(66, m_max(0, round(o[0] * 67))));
-					map += CHARMAP[index];
-					map += ' ';
-				}
-				map += "\n";
-			}
-			Sleep(100);
-			system("cls");
-			std::cout << "Epoch: " << epoch << "\nError: " << (err / train_and_test_samples.size()) << "\n" << map;
-		}
-	}
-	*/
 }
