@@ -150,23 +150,36 @@ void predict(Net* network, std::vector<double> input)
 	
 }
 
+/*
+	LPWSTR buffer = new TCHAR[MAX_PATH];
+	GetModuleFileName(NULL, buffer, MAX_PATH);
+	LPCWSTR standartPath = const_cast<LPCWSTR>(buffer);
+
+	SetCurrentDirectory(standartPath);
+	std::cout << buffer << "\n";
+*/
+
 int main()
 {
 	srand(time(NULL));
-
-
-
+	/*
+	Net newNet = Net::load("../../here");
+	while (true)
+	{
+		draw();
+		std::vector<double> input1 = read_bmp("temp.bmp");
+		predict(&newNet, input1);
+		std::cin.get();
+		
+	}
+	*/
 	std::vector<std::vector<std::vector<double>>> data;
 	read_csv(&data);
-	std::vector<double> input = read_ppm("C:/Users/TH/source/repos/Shieyteo/NeuralNetwork-multilayers/test.ppm");
-	data.push_back({ input,{0,0,0,0,0,0,0,1,0,0} });
 
-
-
-	Net network({ {784,"non"},{100,"tanh"},{100,"tanh"},{10,"tanh"}}, 0.003);
+	Net network({ {784,"non"},{200,"tanh"},{100,"tanh"},{10,"tanh"}}, 0.002);
 	int sampleSize = data.size();
 
-	for (int epochs = 0; epochs < 5; epochs++)
+	for (int epochs = 0; epochs < 50; epochs++)
 	{	
 		double error = 0;
 		for (int index: create_range(sampleSize))
@@ -179,17 +192,30 @@ int main()
 		}
 		std::cout<<"Epoch: " << epochs << "\n";
 		std::cout<<"Error: " << error / sampleSize << "\n";
+		network.save("../../here");
 	}
 
-	network.save("../../here");
-	Net newNet = Net::load("../../here");
-	std::vector<double> input1 = read_bmp("C:/Users/TH/source/repos/Shieyteo/NeuralNetwork-multilayers/Unbenannt.bmp");
-	predict(&newNet, input1);
+	Net newNet1 = Net::load("../../here");
+	while (true)
+	{	
+		draw();
+		std::vector<double> input1 = read_bmp("temp.bmp");
+		predict(&newNet1, input1);
+		std::cin.get();
+		/*
+		std::string inp;
+		std::cout << "Enter path to bmp file(needs to be 28x28 pixels)\n";
+		std::cin >> inp;
+		system("cls");
+		int index = inp.find_last_of('/');
+		std::string sub = inp.substr(0, index);
+		std::string sub1 = inp.substr(index+1);
+		LPCWSTR str = std::wstring(sub.begin(), sub.end()).c_str();
 
-	predict(&newNet, input);
-	while (std::cin.get())
-	{
-		predict(&newNet, data[rand()][0]);
+		SetCurrentDirectory(str);
+		ShellExecute(nullptr, L"open", L"mspaint.exe", std::wstring(sub1.begin(),sub1.end()).c_str(), nullptr, SW_SHOWMAXIMIZED);
+		SetCurrentDirectory(standartPath);
+		*/
 	}
 	return 0;
 }

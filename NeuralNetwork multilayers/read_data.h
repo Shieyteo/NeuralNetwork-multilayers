@@ -69,6 +69,11 @@ std::vector<double> read_bmp(std::string path)
 {
 	std::basic_ifstream<unsigned char> file;
 	file.open(path, std::ios::binary);
+	if (!file.is_open())
+	{
+		std::cout << "File not found\n";
+		return std::vector<double>();
+	}
 	std::basic_string<unsigned char> buffer;
 
 	//header
@@ -81,7 +86,20 @@ std::vector<double> read_bmp(std::string path)
 		//inbuild grayscale
 		colorArray.push_back(abs((0.3 * buffer[i] + 0.59 * buffer[i + 1] + 0.11 * buffer[i + 2]) - 255));
 	}
+	std::reverse(colorArray.begin(),colorArray.end());
+	for (int i = 0; i < 784; i+=28)
+	{
+		std::reverse(colorArray.begin()+i, colorArray.begin()+28+i);
+	}
 	return colorArray;
+}
+
+void draw()
+{
+	CopyFile(L"C:/Users/TH/source/repos/Shieyteo/NeuralNetwork-multilayers/copy.bmp", L"temp.bmp", false);
+	ShellExecute(nullptr, L"open", L"mspaint.exe", L"temp.bmp", nullptr, SW_SHOWDEFAULT);
+	std::cout << "Press enter if you drew the number ...";
+	std::cin.get();
 }
 
 void read_csv(std::vector<std::vector<std::vector<double>>>* input)
