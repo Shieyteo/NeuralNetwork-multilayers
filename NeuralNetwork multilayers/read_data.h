@@ -42,32 +42,49 @@ DWORD WINAPI loadVectorsfromString(void* para) {
 	return 0;
 };
 
-void read_ppm(std::string path)
+std::vector<double> read_ppm(std::string path)
 {
-	std::ifstream file;
+	std::basic_ifstream<unsigned char> file;
 	file.open(path, std::ios::binary);
-	std::string buffer;
+	std::basic_string<unsigned char> buffer;
+	
+	//header
 	std::getline(file, buffer);
-	std::vector<std::vector<int>> colorArray;
+	std::getline(file, buffer);
+	std::getline(file, buffer);
+	std::getline(file, buffer);
+	std::vector<double> colorArray;
+
 	for (int i = 0; i < buffer.size(); i+=3)
 	{
-		colorArray.push_back({ buffer[i],buffer[i + 1],buffer[i + 2] });
+		//inbuild grayscale
+		colorArray.push_back(abs((0.3*buffer[i]+0.59*buffer[i + 1]+0.11*buffer[i + 2])-255));
 	}
-	return;
-	std::getline(file, buffer);
-	if (buffer!="28 28")
-	{
-		std::cout << "Wrong dimensions\n";
-	}
-	std::getline(file,buffer);
-	if (buffer != "255")
-	{
-		std::cout << "Wrong dimensions\n";
-	}
-
+	return colorArray;
+	
 }
 
-void read(std::vector<std::vector<std::vector<double>>>* input)
+/// non encoded only
+std::vector<double> read_bmp(std::string path)
+{
+	std::basic_ifstream<unsigned char> file;
+	file.open(path, std::ios::binary);
+	std::basic_string<unsigned char> buffer;
+
+	//header
+	std::getline(file, buffer);
+	buffer.erase(buffer.begin(), buffer.begin() + 54);
+	std::vector<double> colorArray;
+
+	for (int i = 0; i < buffer.size(); i += 3)
+	{
+		//inbuild grayscale
+		colorArray.push_back(abs((0.3 * buffer[i] + 0.59 * buffer[i + 1] + 0.11 * buffer[i + 2]) - 255));
+	}
+	return colorArray;
+}
+
+void read_csv(std::vector<std::vector<std::vector<double>>>* input)
 {
 	std::chrono::time_point<std::chrono::system_clock> start;
 	start = std::chrono::system_clock::now();

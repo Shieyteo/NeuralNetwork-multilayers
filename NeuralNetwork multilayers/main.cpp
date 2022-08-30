@@ -6,7 +6,7 @@
 #include <thread>
 #include "NeuralNet.h"
 #include "Activations.h"
-#include "read_csv.h"
+#include "read_data.h"
 
 std::vector<std::vector<double>> train_and_test_samples = {};
 
@@ -121,16 +121,16 @@ std::vector<unsigned int> create_range(int to)
 	return range;
 }
 
-void predict(Net* network, std::vector<std::vector<double>> input)
+void predict(Net* network, std::vector<double> input)
 {
 	for (int i = 0; i < 784; i++)
 	{
-		std::cout << input[0][i];
-		if (input[0][i] / 10 <= 1)
+		std::cout << input[i];
+		if (input[i] / 10 <= 1)
 		{
 			std::cout << 0;
 		}
-		if (input[0][i] / 10 <= 10)
+		if (input[i] / 10 <= 10)
 		{
 			std::cout << 0;
 		}
@@ -142,7 +142,7 @@ void predict(Net* network, std::vector<std::vector<double>> input)
 	std::chrono::time_point<std::chrono::system_clock> start;
 	start = std::chrono::system_clock::now();
 
-	int a =  argmax(network->forawrd_prop(input[0]));
+	int a =  argmax(network->forawrd_prop(input));
 
 	std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - start;
 	std::cout << "predicted: " << a << "\n";
@@ -153,11 +153,17 @@ void predict(Net* network, std::vector<std::vector<double>> input)
 int main()
 {
 	srand(time(NULL));
-	read_ppm("C:/Users/TH/source/repos/Shieyteo/NeuralNetwork-multilayers/test.ppm");
-	std::vector<std::vector<std::vector<double>>> data;
-	Net network({ {784,"non"},{100,"tanh"},{100,"tanh"},{10,"tanh"}}, 0.003);
 
-	read(&data);
+
+
+	std::vector<std::vector<std::vector<double>>> data;
+	read_csv(&data);
+	std::vector<double> input = read_ppm("C:/Users/TH/source/repos/Shieyteo/NeuralNetwork-multilayers/test.ppm");
+	data.push_back({ input,{0,0,0,0,0,0,0,1,0,0} });
+
+
+
+	Net network({ {784,"non"},{100,"tanh"},{100,"tanh"},{10,"tanh"}}, 0.003);
 	int sampleSize = data.size();
 
 	for (int epochs = 0; epochs < 5; epochs++)
@@ -177,10 +183,13 @@ int main()
 
 	network.save("../../here");
 	Net newNet = Net::load("../../here");
+	std::vector<double> input1 = read_bmp("C:/Users/TH/source/repos/Shieyteo/NeuralNetwork-multilayers/Unbenannt.bmp");
+	predict(&newNet, input1);
+
+	predict(&newNet, input);
 	while (std::cin.get())
 	{
-
-		predict(&newNet, data[rand()]);
+		predict(&newNet, data[rand()][0]);
 	}
 	return 0;
 }
