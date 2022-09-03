@@ -57,16 +57,16 @@ double derivative_Error(double a, double b)
 	return 2 * (b - a); //derivative of (a-b)^2
 }
 
-static double (*activation)(double) { &ReLU};
+static double (*activation)(double) { &Sigmoid};
 
-static double (*derivative_activation)(double) { &derivative_ReLU};
+static double (*derivative_activation)(double) { &derivative_Sigmoid};
 
 double getRand(char c = 'w')
 {
 	switch (c)
 	{
 	case 'w':
-		return double(rand()) / RAND_MAX * 2 - 1;
+		return double(rand()) / RAND_MAX * 4 - 2;
 	case 'b':
 		return double(rand()) / RAND_MAX;
 	}
@@ -141,15 +141,15 @@ int main()
 {
 	srand(time(NULL)); // intialize rand
 	const double lr = 0.001;	//learning rate
-	createDataSet(1,0.2);
+	createDataSet(0,0.1);
 	//train_and_test_samples = { {1,1,1},{0,1,0},{1,0,0},{0,0,1} };
 	//initiate weights and biases
 	std::vector<std::vector<double>> weights0 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()} };
 	std::vector<std::vector<double>> weights1 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()},{ getRand(),getRand(),getRand() } }; // from input layer to hidden layer 
 	std::vector<std::vector<double>> weights2 = { { getRand()},{getRand() },{ getRand()} }; // from hidden layer to output layer
-	std::vector<double> bias0 = { getRand('b'),getRand('b'),getRand('b')};
-	std::vector<double> bias1 = { getRand('b'),getRand('b'),getRand('b') }; // biases for  the hidden layer
-	std::vector<double> bias2 = { getRand('b')}; // bias for  the output layer
+	std::vector<double> bias0 = { getRand(),getRand(),getRand()};
+	std::vector<double> bias1 = { getRand(),getRand(),getRand() }; // biases for  the hidden layer
+	std::vector<double> bias2 = { getRand()}; // bias for  the output layer
 	
 	
 	for (int epoch = 0; epoch < 1000000000; epoch++)
@@ -256,7 +256,6 @@ int main()
 				}
 				map += "\n";
 			}
-			Sleep(300);
 			system("cls");
 			std::cout << "Epoch: "<<epoch<<"\nError: "<<(error/train_and_test_samples.size()) << "\n" << map ;
 			for (int i = 0; i < weights2.size(); i++)
