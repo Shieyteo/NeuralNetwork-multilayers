@@ -1,97 +1,62 @@
 #include <iostream>
-#include <vector>
 #include <string>
+#include <algorithm>
+#include <random>
 #include <windows.h>
+#include <thread>
+#include "NeuralNet.h"
+#include "Activations.h"
+#include "read_data.h"
 
-const static double LRELUC = 0.25;
-
-double m_max(double a, double b)
-{
-	return a > b ? a : b;
-}
-
-double m_min(double a, double b)
-{
-	return a < b ? a : b;
-}
-
-double Sigmoid(double inp)
-{
-	return 1 / (1 + exp(-inp));
-}
-
-double ReLU(double in)
-{
-	return m_max(in, 0);
-}
-
-double LeakyReLU(double in)
-{
-	return in >= 0 ? in : in * LRELUC;
-}
-
-double derivative_LeakyReLU(double in)
-{
-	return in >= 0 ? 0 : LRELUC;
-}
-
-double derivative_ReLU(double in)
-{
-	return in <= 0 ? 0 : 1;
-}
-
-double derivative_Sigmoid(double b)
-{
-	return b * (1 - b);
-}
-
-
-double derivative_tanh(double b)
-{
-	double e = tanh(b);
-	return 1 - e * e;
-}
-
-double derivative_Error(double a, double b)
-{
-	return 2 * (b - a); //derivative of (a-b)^2
-}
-
-static double (*activation)(double) { &Sigmoid};
-
-static double (*derivative_activation)(double) { &derivative_Sigmoid};
-
-double getRand(char c = 'w')
-{
-	switch (c)
-	{
-	case 'w':
-		return double(rand()) / RAND_MAX * 4 - 2;
-	case 'b':
-		return double(rand()) / RAND_MAX;
-	}
-}
-
-std::vector<double> forwardProp(std::vector<std::vector<double>>* weights, std::vector<double>* values, std::vector<double>* bias)
-{
-	std::vector<double> ret;
-	for (int output = 0; output < weights->at(0).size(); output++)
-	{
-		double sum = bias->at(output);
-		for (int input = 0; input < weights->size(); input++)
-		{
-			sum += weights->at(input)[output] * values->at(input);
-		}
-		//ret.push_back(Sigmoid(sum));
-		ret.push_back(activation(sum));
-	}
-	return ret;	// takes in weights and values and multiplies them with eachother + adds the biases
-}
-
-// input at index 0 and 1 expected output at index 2
-std::vector<std::vector<double>> train_and_test_samples = {}; //XOR Problem (Non linear) 
+std::vector<std::vector<double>> train_and_test_samples = {};
 
 std::string CHARMAP = ".'`^_,:;-~+*?!i><][}{1)(|/IltfjrxnuvczXYUJCLQ0OZmwqpdbkhao#MW&8%B$@";
+
+template<class T>
+void show(std::vector<T> toPrint)
+{
+	for (T item: toPrint)
+	{
+		std::cout << item << " ";
+	}
+	std::cout << "\n";
+}
+
+template<class T>
+int argmax(std::vector<T> findMax)
+{
+	int index = 0;
+	double high = findMax[0];
+	for (int i = 0; i < findMax.size(); i++)
+	{
+		if (high < findMax[i])
+		{
+			index = i;
+			high = findMax[i];
+		}
+	}
+	return index;
+}
+
+std::vector<std::vector<double>> average(std::vector < std::vector<std::vector<double>>>& inp)
+{
+	std::vector<std::vector<double>> ret;
+	for (int i = 0; i < inp[0].size(); i++)
+	{
+		std::vector<double> temp;
+		for (int j = 0; j < inp[0][0].size(); j++)
+		{
+			double sum = 0;
+			for (int k = 0; k < inp.size(); k++)
+			{
+				sum += inp[k][i][j];
+			}
+			temp.push_back(sum / inp.size());
+		}
+		ret.push_back(temp);
+	}
+	return ret;
+}
 
 void createDataSet(unsigned int number, float precision=0.05)
 {
@@ -133,138 +98,124 @@ void createDataSet(unsigned int number, float precision=0.05)
 		}
 		return;
 	}
+	case 2:
+		for (double i = 0; i < 10; i++)
+		{
+			for (double j = 0; j < 10; j++)
+			{
+				train_and_test_samples.push_back({ i,j,i * j });
+			}
+		}
 	}
+}
+
+std::vector<unsigned int> create_range(int to)
+{
+	std::vector<unsigned int> range;
+	for (int i = 0; i < to; i++)
+	{
+		range.push_back(i);
+	}
+	auto rng = std::default_random_engine{};
+	std::shuffle(std::begin(range), std::end(range), rng);
+	return range;
+}
+
+void predict(Net* network, std::vector<double> input)
+{
+	for (int i = 0; i < 784; i++)
+	{
+		std::cout << input[i];
+		if (input[i] / 10 <= 1)
+		{
+			std::cout << 0;
+		}
+		if (input[i] / 10 <= 10)
+		{
+			std::cout << 0;
+		}
+		if (i % 28 == 27)
+		{
+			std::cout << "\n";
+		}
+	}
+	std::chrono::time_point<std::chrono::system_clock> start;
+	start = std::chrono::system_clock::now();
+
+	int a =  argmax(network->forawrd_prop(input));
+
+	std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - start;
+	std::cout << "predicted: " << a << "\n";
+	std::cout << "Predicted img in " << elapsed_seconds.count() << "s\n";
 	
 }
 
+/*
+	LPWSTR buffer = new TCHAR[MAX_PATH];
+	GetModuleFileName(NULL, buffer, MAX_PATH);
+	LPCWSTR standartPath = const_cast<LPCWSTR>(buffer);
+
+	SetCurrentDirectory(standartPath);
+	std::cout << buffer << "\n";
+*/
+
 int main()
 {
-	srand(time(NULL)); // intialize rand
-	const double lr = 0.001;	//learning rate
-	createDataSet(0,0.1);
-	//train_and_test_samples = { {1,1,1},{0,1,0},{1,0,0},{0,0,1} };
-	//initiate weights and biases
-	std::vector<std::vector<double>> weights0 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()} };
-	std::vector<std::vector<double>> weights1 = { { getRand(),getRand(),getRand() },{ getRand(),getRand(),getRand()},{ getRand(),getRand(),getRand() } }; // from input layer to hidden layer 
-	std::vector<std::vector<double>> weights2 = { { getRand()},{getRand() },{ getRand()} }; // from hidden layer to output layer
-	std::vector<double> bias0 = { getRand(),getRand(),getRand()};
-	std::vector<double> bias1 = { getRand(),getRand(),getRand() }; // biases for  the hidden layer
-	std::vector<double> bias2 = { getRand()}; // bias for  the output layer
-	
-	
-	for (int epoch = 0; epoch < 1000000000; epoch++)
+	srand(time(NULL));
+	/*
+	Net newNet = Net::load("../../here");
+	while (true)
 	{
-		double error = 0;
-		for (std::vector<double> sample : train_and_test_samples)
-		{
-			//initalize train data
-			std::vector<double> input = { sample[0],sample[1] };
-			double expected = sample[2];
-
-			//forward propagation
-			std::vector<double> hidden_layer_values0 = forwardProp(&weights0, &input, &bias0);
-			std::vector<double> hidden_layer_values1 = forwardProp(&weights1, &hidden_layer_values0, &bias1);
-			std::vector<double> output_layer_values = forwardProp(&weights2, &hidden_layer_values1, &bias2); // in this senario just one value
-
-			error += abs(expected - output_layer_values[0]);
-			//BACKPROP
-
-			//Outputlayer error calculation	
-			double d_err = derivative_Error(expected, output_layer_values[0]);
-			double d_sig = derivative_activation(output_layer_values[0]);
-
-			double complete_error20 = d_err * d_sig;
-
-			//Hiddenlayer error calculation										
-			double d_err_hidden10 = complete_error20 * weights2[0][0];
-			double d_err_hidden11 = complete_error20 * weights2[1][0];
-			double d_err_hidden12 = complete_error20 * weights2[2][0];
-
-
-			double d_sig_hidden10 = derivative_activation(hidden_layer_values1[0]);
-			double d_sig_hidden11 = derivative_activation(hidden_layer_values1[1]);
-			double d_sig_hidden12 = derivative_activation(hidden_layer_values1[2]);
-
-			double complete_error10 = d_err_hidden10 * d_sig_hidden10;
-			double complete_error11 = d_err_hidden11 * d_sig_hidden11;
-			double complete_error12 = d_err_hidden12 * d_sig_hidden12;
-
-			double d_err_hidden00 = complete_error10 * weights1[0][0] + complete_error11 * weights1[0][1] + complete_error12 * weights1[0][2];
-			double d_err_hidden01 = complete_error10 * weights1[1][0] + complete_error11 * weights1[1][1] + complete_error12 * weights1[1][2];
-			double d_err_hidden02 = complete_error10 * weights1[2][0] + complete_error11 * weights1[2][1] + complete_error12 * weights1[2][2];
-
-			double d_sig_hidden00 = derivative_activation(hidden_layer_values0[0]);
-			double d_sig_hidden01 = derivative_activation(hidden_layer_values0[1]);
-			double d_sig_hidden02 = derivative_activation(hidden_layer_values0[2]);
-
-			double complete_error00 = d_err_hidden00 * d_sig_hidden00;
-			double complete_error01 = d_err_hidden01 * d_sig_hidden01;
-			double complete_error02 = d_err_hidden02 * d_sig_hidden02;
-
-			//bias adjustment
-			bias2[0] -= lr * complete_error20;
-
-			//weight adjustment
-			weights2[0][0] -= lr * complete_error20 * hidden_layer_values1[0];
-			weights2[1][0] -= lr * complete_error20 * hidden_layer_values1[1];
-
-			//bias adjustment
-			bias1[0] -= lr * complete_error10;
-			bias1[1] -= lr * complete_error11;
-			bias1[2] -= lr * complete_error12;
-
-			//weight adjustment
-			weights1[0][0] -= lr * complete_error10 * hidden_layer_values0[0];
-			weights1[1][0] -= lr * complete_error10 * hidden_layer_values0[1];
-			weights1[2][0] -= lr * complete_error10 * hidden_layer_values0[2];
-			weights1[0][1] -= lr * complete_error11 * hidden_layer_values0[0];
-			weights1[1][1] -= lr * complete_error11 * hidden_layer_values0[1];
-			weights1[2][1] -= lr * complete_error11 * hidden_layer_values0[2];
-			weights1[0][2] -= lr * complete_error12 * hidden_layer_values0[0];
-			weights1[1][2] -= lr * complete_error12 * hidden_layer_values0[1];
-			weights1[2][2] -= lr * complete_error12 * hidden_layer_values0[2];
-
-			//bias adjustment
-			bias0[0] -= lr * complete_error00;
-			bias0[1] -= lr * complete_error01;
-			bias0[2] -= lr * complete_error02;
-
-			//weight adjustment
-			weights0[0][0] -= lr * complete_error00 * input[0];
-			weights0[1][0] -= lr * complete_error00 * input[1];
-			weights0[0][1] -= lr * complete_error01 * input[0];
-			weights0[1][1] -= lr * complete_error01 * input[1];
-			weights0[0][2] -= lr * complete_error02 * input[0];
-			weights0[1][2] -= lr * complete_error02 * input[1];
-
-		}
-		if (epoch % 100 == 0)
-		{
-			std::string map;
-			int size = 50;
-			for (float i = size-1; i > -1; i--)
-			{
-				for (float j = 0; j < size; j++)
-				{
-					std::vector<double> val_input = { i / size,j / size };
-					std::vector<double> h0 = forwardProp(&weights0, &val_input, &bias0);
-					std::vector<double> h1 = forwardProp(&weights1, &h0, &bias1);
-					std::vector<double> o = forwardProp(&weights2, &h1, &bias2); // in this senario just one value
-					int index = (m_min(66,m_max(0, round(o[0] * 67))));
-					map += CHARMAP[index];
-					map += ' ';
-				}
-				map += "\n";
-			}
-			system("cls");
-			std::cout << "Epoch: "<<epoch<<"\nError: "<<(error/train_and_test_samples.size()) << "\n" << map ;
-			for (int i = 0; i < weights2.size(); i++)
-			{
-				for (int j = 0; j < weights2[0].size(); j++)
-				{
-					std::cout << weights2[i][j] << "\n";
-				}
-			}
-		}
+		draw();
+		std::vector<double> input1 = read_bmp("temp.bmp");
+		predict(&newNet, input1);
+		std::cin.get();
+		
 	}
+	*/
+	std::vector<std::vector<std::vector<double>>> data;
+	read_csv(&data);
+
+	Net network({ {784,"non"},{200,"tanh"},{100,"tanh"},{10,"tanh"}}, 0.002);
+	int sampleSize = data.size();
+
+	for (int epochs = 0; epochs < 50; epochs++)
+	{	
+		double error = 0;
+		for (int index: create_range(sampleSize))
+		{
+			std::vector<double> output = network.forawrd_prop(data[index][0]);	// forward prop
+			if (argmax(output) != argmax(data[index][1]))						// check results
+				error++;														// calc display error
+
+			network.back_prop(data[index][1]);									// train
+		}
+		std::cout<<"Epoch: " << epochs << "\n";
+		std::cout<<"Error: " << error / sampleSize << "\n";
+		network.save("../../here");
+	}
+
+	Net newNet1 = Net::load("../../here");
+	while (true)
+	{	
+		draw();
+		std::vector<double> input1 = read_bmp("temp.bmp");
+		predict(&newNet1, input1);
+		std::cin.get();
+		/*
+		std::string inp;
+		std::cout << "Enter path to bmp file(needs to be 28x28 pixels)\n";
+		std::cin >> inp;
+		system("cls");
+		int index = inp.find_last_of('/');
+		std::string sub = inp.substr(0, index);
+		std::string sub1 = inp.substr(index+1);
+		LPCWSTR str = std::wstring(sub.begin(), sub.end()).c_str();
+
+		SetCurrentDirectory(str);
+		ShellExecute(nullptr, L"open", L"mspaint.exe", std::wstring(sub1.begin(),sub1.end()).c_str(), nullptr, SW_SHOWMAXIMIZED);
+		SetCurrentDirectory(standartPath);
+		*/
+	}
+	return 0;
 }
