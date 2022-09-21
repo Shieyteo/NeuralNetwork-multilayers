@@ -5,28 +5,36 @@
 
 static const double LRELUC = 0.25;
 
+// see some activation functions at https://www.geogebra.org/m/mszfwq6a
+
+// random number between -1 and 1 for weights and biases
 double getRand()
 {
 	return ((double(rand()) / RAND_MAX) * 2) - 1;
 }
 
+// returns bigger number
 double m_max(double a, double b)
 {
 	return a > b ? a : b;
 }
 
+// returns smaller number
 double m_min(double a, double b)
 {
 	return a < b ? a : b;
 }
 
+// non function for activation
 void nona(std::vector<double>& a) {}
 
+// non function for derivative
 std::vector<double> nond(std::vector<double>& a) 
 { 
-	return std::vector<double>(a.size(),1); 
+	return std::vector<double>(a.size(),1);  // derivative for standart linear function is 1
 }
 
+// applies sigmoid to inp vector
 void Sigmoid(std::vector<double>& inp)
 {
 	for (int i = 0; i < inp.size(); i++)
@@ -35,6 +43,7 @@ void Sigmoid(std::vector<double>& inp)
 	}
 }
 
+// applies derivative of sigmoid to inp vector
 std::vector<double> dSigmoid(std::vector<double>& inp)
 {
 	std::vector<double> ret = std::vector<double>(inp.size());
@@ -45,6 +54,7 @@ std::vector<double> dSigmoid(std::vector<double>& inp)
 	return ret;
 }
 
+// applies tanh to vector
 void Tanh(std::vector<double>& inp)
 {
 	for (int i = 0; i < inp.size(); i++)
@@ -53,6 +63,7 @@ void Tanh(std::vector<double>& inp)
 	}
 }
 
+// applies derivative of tanh to vector
 std::vector<double> dTanh(std::vector<double>& inp)
 {
 	std::vector<double> ret = std::vector<double>(inp.size());
@@ -64,6 +75,7 @@ std::vector<double> dTanh(std::vector<double>& inp)
 	return ret;
 }
 
+// applies relu activation to vector
 void ReLU(std::vector<double>& inp)
 {
 	for (int i = 0; i < inp.size(); i++)
@@ -72,6 +84,7 @@ void ReLU(std::vector<double>& inp)
 	}
 }
 
+// applies relu derivative to vector
 std::vector<double> dReLU(std::vector<double>& inp)
 {
 	std::vector<double> ret;
@@ -82,6 +95,7 @@ std::vector<double> dReLU(std::vector<double>& inp)
 	return ret;
 }
 
+// applies softmax to inp (expirimental)
 void Softmax(std::vector<double>& inp)
 {
 	double sum = 0;
@@ -95,11 +109,7 @@ void Softmax(std::vector<double>& inp)
 	}
 }
 
-//double Sigmoid(double inp)
-//{
-//	return 1 / (1 + exp(-inp));
-//}
-
+// applies elu
 double elu(double inp)
 {
 	if (inp>=0)
@@ -109,6 +119,7 @@ double elu(double inp)
 	return exp(inp) - 1;
 }
 
+//applies d_elu
 double derivative_elu(double in)
 {
 	if (in>=0)
@@ -118,33 +129,17 @@ double derivative_elu(double in)
 	return exp(in);
 }
 
+// applies leakyReLU
 double LeakyReLU(double in)
 {
 	return in >= 0 ? in : in * LRELUC;
 }
 
+// applies leakydReLU
 double derivative_LeakyReLU(double in)
 {
 	return in >= 0 ? 0 : LRELUC;
 }
-
-double derivative_ReLU(double in)
-{
-	return in <= 0 ? 0 : 1;
-}
-
-double derivative_Sigmoid(double b)
-{
-	return b * (1 - b);
-}
-
-
-double derivative_tanh(double b)
-{
-	double e = tanh(b);
-	return 1 - e * e;
-}
-
 
 class Activation
 {
@@ -170,12 +165,13 @@ public:
 				return Activation::allActivations[i];
 			}
 		}
+		std::cout << "Activation not found see Activation.h for more\n";
 		return nullptr;
 	}
 };
 std::vector<Activation*> Activation::allActivations = {};
 
-
+//available activation functions
 Activation TANH(Tanh, dTanh,"tanh");
 Activation SIGMOID(Sigmoid, dSigmoid,"sigmoid");
 Activation RELU(ReLU, dReLU,"relu");

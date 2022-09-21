@@ -18,16 +18,26 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Matrix.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Perceptron.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Matrix.h">
+    <ClInclude Include="Activations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NeuralNet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="read_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\copy.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\train.csv">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -132,6 +132,15 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Activations.h" />
+    <ClInclude Include="NeuralNet.h" />
+    <ClInclude Include="read_data.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\copy.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\train.csv" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

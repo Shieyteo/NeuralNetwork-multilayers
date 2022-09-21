@@ -1,4 +1,5 @@
 #include "Activations.h"
+
 #include <vector>
 #include <fstream>
 #include <tuple>
@@ -20,7 +21,6 @@ std::vector<double> split(std::string str)
 		out.push_back(atof(token.c_str()));
 		str.erase(0, pos + 1);
 	}
-	//out.push_back(atof(str.c_str()));
 	return out;
 }
 
@@ -74,7 +74,7 @@ public:
 			}
 		}
 	}
-	std::vector<double> forawrd_prop(std::vector<double> input)
+	std::vector<double> forward_prop(std::vector<double> input)
 	{
 		values[0]=input;
 		for (int layer = 0; layer < layerNum -1; layer++)
@@ -111,10 +111,10 @@ public:
 	/// Expects already forward proped network
 	std::vector<std::vector<double>> back_prop(std::vector<double> expected,bool updateWeights = true)
 	{
-		std::vector<double> d_act = activations[layerNum - 1]->dact(values[layerNum - 1]); // calculatin error for outpu layer
+		std::vector<double> d_act = activations[layerNum - 1]->dact(values[layerNum - 1]); // calculatin error for output layer
 		for (int i = 0; i < topo[layerNum -1]; i++)
 		{
-			double d_err = derr(expected[i], values[layerNum -1][i]);
+			double d_err = derr(expected[i], values[layerNum - 1][i]);
 			errors[layerNum -1][i] = d_err * d_act[i];
 		}
 		for (int layer = layerNum -2; layer > 0; layer--)	// calaculating error for the rest
